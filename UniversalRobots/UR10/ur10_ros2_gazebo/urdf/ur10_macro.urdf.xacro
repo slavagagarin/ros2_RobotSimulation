@@ -224,6 +224,24 @@
         <origin xyz="0.0 0.0 ${-0.5 * wrist_3_inertia_length}" rpy="0 0 0" />
       </xacro:cylinder_inertial>
     </link>
+    <!-- Define the camera link -->
+    <link name="${prefix}camera_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.01 0.01 0.01"/>
+        </geometry>
+        <material name="blue">
+          <color rgba="0 0 1 1"/>
+        </material>
+      </visual>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+      </inertial>
+    </link>  
+
 
     <!-- Joints: -->
     <joint name="${prefix}base_link-base_link_inertia" type="fixed">
@@ -308,6 +326,46 @@
       </xacro:if>
       <dynamics damping="0" friction="0"/>
     </joint>
+    <!-- Define the joint that connects the camera to the wrist_3_link -->
+    <joint name="${prefix}camera_joint" type="fixed">
+      <parent link="${prefix}wrist_3_link"/>
+      <child link="${prefix}camera_link"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Define the camera sensor -->
+    <gazebo reference="${prefix}camera_link">
+      <sensor type="camera" name="${prefix}camera_sensor">
+        <update_rate>30.0</update_rate>
+        <camera>
+          <horizontal_fov>1.3962634</horizontal_fov>
+          <image>
+            <width>1280</width>
+            <height>720</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+        </camera>
+        <plugin name="${prefix}camera_controller" filename="libgazebo_ros_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>0</updateRate>
+          <cameraName>${prefix}camera</cameraName>
+          <imageTopicName>${prefix}camera/image_raw</imageTopicName>
+          <cameraInfoTopicName>${prefix}camera/camera_info</cameraInfoTopicName>
+          <frameName>${prefix}camera_link</frameName>
+          <hackBaseline>0.07</hackBaseline>
+          <distortionK1>0</distortionK1>
+          <distortionK2>0</distortionK2>
+          <distortionK3>0</distortionK3>
+          <distortionT1>0</distortionT1>
+          <distortionT2>0</distortionT2>
+        </plugin>
+      </sensor>
+    </gazebo>
+
 
     <!-- ROS-Industrial 'base' frame - base_link to UR 'Base' Coordinates transform -->
     <link name="${prefix}base"/>
